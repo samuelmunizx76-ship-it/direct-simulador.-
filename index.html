@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Direct — Simulador</title>
+<style>
+:root{--bg:#fff;--panel:#fff;--text:#111;--muted:#777;--line:#e8e8e8;--soft:#f5f5f5;--sent:#3797f0;--received:#efefef;--accent:#0095f6}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}button,input,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #3797f0;outline-offset:2px}
+.app{height:100dvh;max-width:1100px;margin:auto;display:flex;flex-direction:column;border-left:1px solid var(--line);border-right:1px solid var(--line);position:relative}
+.topbar{height:62px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--line);gap:10px}
+.brand{font-size:21px;font-weight:750;letter-spacing:-.7px;display:flex;align-items:center;gap:8px}.sim-tag{font-size:9px;letter-spacing:.7px;font-weight:800;background:#fff2cc;color:#785600;border:1px solid #f0d889;padding:4px 6px;border-radius:5px}
+.top-actions{display:flex;gap:8px}.iconbtn{border:0;background:transparent;font-size:21px;padding:7px;border-radius:9px;color:var(--text)}.iconbtn:hover{background:var(--soft)}
+.layout{min-height:0;flex:1;display:grid;grid-template-columns:340px minmax(0,1fr)}
+.sidebar{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}.sidehead{padding:20px 16px 12px;display:flex;align-items:center;justify-content:space-between}.sidehead strong{font-size:19px}.searchwrap{padding:0 14px 12px}.search{width:100%;border:0;background:var(--soft);padding:11px 13px;border-radius:10px;font-size:14px}
+.conversations{overflow:auto;flex:1}.conv{width:100%;border:0;background:transparent;display:flex;align-items:center;text-align:left;gap:12px;padding:11px 14px;min-height:76px}.conv:hover,.conv.active{background:#f7f7f7}.avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#ddd;flex:none;display:grid;place-items:center;color:#555;font-weight:700}.convtext{min-width:0;flex:1}.convname{font-size:14px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.emptylist{padding:20px;color:var(--muted);font-size:14px}
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chathead{height:68px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;padding:0 16px}.chathead .avatar{width:39px;height:39px}.chatidentity{min-width:0;flex:1}.chatidentity strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chatidentity small{display:block;color:var(--muted);font-size:12px;margin-top:3px}.headtools{display:flex;gap:2px}.backbtn{display:none}
+.messages{flex:1;min-height:0;overflow:auto;padding:22px 18px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.profile-intro{text-align:center;padding:22px 10px 25px;color:var(--muted);font-size:12px}.profile-intro .avatar{width:82px;height:82px;margin:0 auto 10px;font-size:24px}.profile-intro strong{display:block;color:var(--text);font-size:15px;margin-bottom:5px}.profile-intro button{margin-top:12px}
+.daylabel{text-align:center;color:#888;font-size:11px;margin:8px 0}
+.msgrow{display:flex;align-items:flex-end;gap:7px;max-width:86%;position:relative}.msgrow.sent{align-self:flex-end;flex-direction:row-reverse}.msgrow.received{align-self:flex-start}.msgbubble{padding:10px 13px;border-radius:21px;line-height:1.35;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;position:relative}.received .msgbubble{background:var(--received);border-bottom-left-radius:6px}.sent .msgbubble{background:var(--sent);color:#fff;border-bottom-right-radius:6px}.msgmeta{font-size:10px;color:#8b8b8b;margin-top:4px;padding:0 5px}.sent .msgmeta{text-align:right}.msgtools{display:none;gap:2px}.msgrow:hover .msgtools,.msgrow:focus-within .msgtools{display:flex}.tinybtn{border:0;background:var(--soft);border-radius:7px;padding:5px 6px;font-size:12px;color:#333}
+.composer{padding:12px 15px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:9px;align-items:flex-end}.composer textarea{flex:1;resize:none;max-height:110px;min-height:42px;border:1px solid #ddd;border-radius:22px;padding:11px 14px;font-size:14px;line-height:1.3}.sendbtn{border:0;background:transparent;color:var(--accent);font-weight:700;padding:12px 3px}.sendbtn:disabled{opacity:.4}
+.primary{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:10px 13px;font-weight:650}.secondary{background:var(--soft);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 12px}.danger{color:#d93025}.hint{font-size:11px;color:var(--muted);text-align:center;padding:0 12px 8px}
+.blank{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}.blank .circle{border:2px solid #222;border-radius:50%;width:76px;height:76px;display:grid;place-items:center;font-size:34px;margin-bottom:16px}.blank h2{font-size:20px;margin:0 0 8px}.blank p{color:var(--muted);font-size:13px;max-width:280px;line-height:1.5}
+.modalback{position:absolute;inset:0;background:#0006;z-index:5;display:none;align-items:center;justify-content:center;padding:18px}.modalback.show{display:flex}.modal{background:var(--panel);border-radius:16px;padding:20px;width:min(100%,440px);max-height:90%;overflow:auto;box-shadow:0 10px 40px #0002}.modal h2{font-size:18px;margin:0 0 16px}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}.field label{font-size:12px;color:var(--muted);font-weight:650}.field input,.field textarea{width:100%;border:1px solid #ddd;border-radius:9px;padding:10px 11px;background:var(--bg);color:var(--text)}.field textarea{min-height:80px;resize:vertical}.modalactions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}.modalnote{font-size:12px;line-height:1.45;color:var(--muted);margin:0 0 14px}.filelabel{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.mobile-nav{display:none}
+@media(max-width:700px){
+ .app{height:100dvh;border:0}.topbar{height:56px;padding:0 13px}.brand{font-size:20px}.layout{display:block;position:relative;overflow:hidden}.sidebar{position:absolute;inset:0;border:0;background:var(--bg)}.chat{position:absolute;inset:0;background:var(--bg);display:none}.layout.chat-open .sidebar{display:none}.layout.chat-open .chat{display:flex}.backbtn{display:inline-block;margin-left:-9px}.sidehead{padding-top:17px}.sidehead strong{font-size:20px}.conv{padding:11px 15px}.chathead{height:62px;padding:0 12px;gap:8px}.messages{padding:16px 12px}.msgrow{max-width:92%}.msgbubble{font-size:14px}.composer{padding:10px 12px calc(10px + env(safe-area-inset-bottom))}.hint{display:none}.msgtools{display:flex}.tinybtn{padding:5px}.top-actions .iconbtn{font-size:19px}
+}
+@media(prefers-color-scheme:dark){
+ body.auto-dark{--bg:#000;--panel:#171717;--text:#f5f5f5;--muted:#a1a1a1;--line:#262626;--soft:#202020;--received:#262626;--sent:#3797f0}
+ body.auto-dark .conv:hover,body.auto-dark .conv.active{background:#171717}body.auto-dark .avatar{background:#333;color:#ddd}body.auto-dark .field input,body.auto-dark .field textarea{border-color:#444}body.auto-dark .tinybtn{color:#eee;background:#303030}
+}
+</style>
+</head>
+<body class="auto-dark">
+<div class="app">
+  <header class="topbar">
+    <div class="brand">Direct <span class="sim-tag">SIMULAÇÃO</span></div>
+    <div class="top-actions">
+      <button class="iconbtn" id="newChatBtn" aria-label="Nova conversa" title="Nova conversa">✎</button>
+      <button class="iconbtn" id="profileBtn" aria-label="Editar perfil" title="Editar meu perfil">☻</button>
+      <button class="iconbtn" id="dataBtn" aria-label="Importar ou exportar" title="Importar/exportar">⋯</button>
+    </div>
+  </header>
+  <main class="layout" id="layout">
+    <aside class="sidebar">
+      <div class="sidehead"><strong id="myHandle">seu_usuario</strong><button class="iconbtn" id="addConversation" title="Nova conversa" aria-label="Nova conversa">＋</button></div>
+      <div class="searchwrap"><input class="search" id="search" placeholder="Pesquisar" aria-label="Pesquisar conversas"></div>
+      <div class="conversations" id="conversationList"></div>
+      <div class="hint">Simulador independente · nada é enviado ao Instagram</div>
+    </aside>
+    <section class="chat" id="chatPanel">
+      <div class="chathead" id="chatHead">
+        <button class="iconbtn backbtn" id="backBtn" aria-label="Voltar">‹</button>
+        <div class="avatar" id="headAvatar">?</div>
+        <div class="chatidentity"><strong id="headName">Escolha uma conversa</strong><small id="headHandle">@usuario</small></div>
+        <div class="headtools">
+          <button class="iconbtn" id="editContactBtn" title="Editar perfil da conversa" aria-label="Editar perfil da conversa">⋯</button>
+        </div>
+      </div>
+      <div class="messages" id="messages">
+        <div class="blank"><div class="circle">✉</div><h2>Suas mensagens</h2><p>Escolha uma conversa na lista ou crie uma nova para começar a simulação.</p><button class="primary" id="blankNew">Nova mensagem</button></div>
+      </div>
+      <form class="composer" id="composer">
+        <textarea id="messageInput" rows="1" placeholder="Envie uma mensagem..." aria-label="Escrever mensagem" disabled></textarea>
+        <button class="sendbtn" id="sendBtn" type="submit" disabled>Enviar</button>
+      </form>
+    </section>
+  </main>
+</div>
+<div class="modalback" id="modalBack" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h2 id="modalTitle">Editar</h2>
+    <div id="modalBody"></div>
+    <div class="modalactions" id="modalActions"></div>
+  </div>
+</div>
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const uid = () => 'id_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+const defaultAvatar = name => 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || '?') + '&background=e5e7eb&color=333&size=128';
+const starter = {
+ version:1, me:{name:'Seu Nome',handle:'seu_usuario',avatar:''}, activeId:'c1',
+ conversations:[
+  {id:'c1',name:'Marina Costa',handle:'marina.costa',avatar:'',messages:[
+   {id:'m1',side:'received',text:'Oii, tudo bem?',time:'14:32'},
+   {id:'m2',side:'sent',text:'Oii! Tudo sim, e você?',time:'14:33'},
+   {id:'m3',side:'received',text:'Tudo ótimo 😊',time:'14:34'}
+  ]},
+  {id:'c2',name:'Lucas Martins',handle:'lucas.m',avatar:'',messages:[
+   {id:'m4',side:'received',text:'Você vai hoje?',time:'Ontem'},
+   {id:'m5',side:'sent',text:'Acho que sim!',time:'Ontem'}
+  ]},
+  {id:'c3',name:'Ana Clara',handle:'anaclara',avatar:'',messages:[]}
+ ]
+};
+let state = loadState();
+let modalSave = null;
+
+function loadState(){
+ try { const raw=localStorage.getItem('directSimulatorData'); if(raw){const x=JSON.parse(raw); if(x && Array.isArray(x.conversations) && x.me) return normalize(x);} } catch(e){}
+ return structuredClone(starter);
+}
+function normalize(x){
+ x.version=1; x.me ||= {name:'Seu Nome',handle:'seu_usuario',avatar:''}; x.conversations ||= [];
+ x.conversations=x.conversations.map(c=>({id:c.id||uid(),name:c.name||'Contato',handle:c.handle||'usuario',avatar:c.avatar||'',messages:Array.isArray(c.messages)?c.messages.map(m=>({id:m.id||uid(),side:m.side==='sent'?'sent':'received',text:String(m.text??''),time:m.time||nowTime()})):[]}));
+ if(!x.conversations.some(c=>c.id===x.activeId)) x.activeId=x.conversations[0]?.id||null;
+ return x;
+}
+function persist(){try{localStorage.setItem('directSimulatorData',JSON.stringify(state));}catch(e){alert('Não foi possível salvar no navegador. Exporte os dados para não perdê-los.');}}
+function nowTime(){return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function active(){return state.conversations.find(c=>c.id===state.activeId)||null;}
+function avatarUrl(person){return person.avatar||defaultAvatar(person.name||person.handle||'?');}
+function avatarNode(person, cls='avatar'){const el=document.createElement('img');el.className=cls;el.alt='Foto de '+(person.name||'perfil');el.src=avatarUrl(person);el.onerror=()=>{el.onerror=null;el.src=defaultAvatar(person.name||'?');};return el;}
+function render(){
+ $('myHandle').textContent=state.me.handle||'seu_usuario';
+ renderConversations(); renderChat();
+}
+function renderConversations(){
+ const q=$('search').value.trim().toLowerCase(), list=$('conversationList'); list.replaceChildren();
+ const items=state.conversations.filter(c=>(c.name+' '+c.handle+' '+(c.messages.at(-1)?.text||'')).toLowerCase().includes(q));
+ if(!items.length){const e=document.createElement('div');e.className='emptylist';e.textContent=state.conversations.length?'Nenhuma conversa encontrada.':'Crie sua primeira conversa.';list.append(e);return;}
+ items.forEach(c=>{
+  const b=document.createElement('button');b.className='conv'+(c.id===state.activeId?' active':'');b.type='button';b.onclick=()=>{state.activeId=c.id;persist();render();$('layout').classList.add('chat-open');};
+  b.append(avatarNode(c));
+  const t=document.createElement('div');t.className='convtext';
+  const n=document.createElement('div');n.className='convname';n.textContent=c.name||c.handle;
+  const p=document.createElement('div');p.className='preview';const last=c.messages.at(-1);p.textContent=last?((last.side==='sent'?'Você: ':'')+last.text):'Toque para iniciar uma conversa';
+  t.append(n,p);b.append(t);list.append(b);
+ });
+}
+function renderChat(){
+ const c=active(), msgs=$('messages');
+ if(!c){
+  $('headName').textContent='Escolha uma conversa';$('headHandle').textContent='';$('headAvatar').textContent='?';$('headAvatar').removeAttribute('src');
+  msgs.innerHTML='<div class="blank"><div class="circle">✉</div><h2>Suas mensagens</h2><p>Escolha uma conversa na lista ou crie uma nova para começar a simulação.</p><button class="primary" id="blankNew">Nova mensagem</button></div>';
+  $('blankNew').onclick=()=>openContactForm();$('messageInput').disabled=true;$('sendBtn').disabled=true;$('editContactBtn').disabled=true;return;
+ }
+ $('headName').textContent=c.name;$('headHandle').textContent='@'+(c.handle||'usuario');
+ const old=$('headAvatar');const img=avatarNode(c);img.id='headAvatar';img.style.width='39px';img.style.height='39px';old.replaceWith(img);
+ $('messageInput').disabled=false;$('sendBtn').disabled=false;$('editContactBtn').disabled=false;
+ msgs.replaceChildren();
+ const intro=document.createElement('div');intro.className='profile-intro';intro.append(avatarNode(c));
+ const strong=document.createElement('strong');strong.textContent=c.name;intro.append(strong);
+ const h=document.createElement('div');h.textContent='@'+c.handle;intro.append(h);
+ const edit=document.createElement('button');edit.className='secondary';edit.textContent='Editar perfil';edit.onclick=()=>openContactForm(c);intro.append(edit);msgs.append(intro);
+ if(!c.messages.length){const d=document.createElement('div');d.className='daylabel';d.textContent='Esta é uma conversa de demonstração';msgs.append(d);}
+ c.messages.forEach(m=>{
+  const row=document.createElement('div');row.className='msgrow '+m.side;row.dataset.id=m.id;
+  const stack=document.createElement('div');stack.style.maxWidth='100%';
+  const bubble=document.createElement('div');bubble.className='msgbubble';bubble.textContent=m.text;stack.append(bubble);
+  const meta=document.createElement('div');meta.className='msgmeta';meta.textContent=m.time||'';stack.append(meta);
+  const tools=document.createElement('div');tools.className='msgtools';
+  const editBtn=document.createElement('button');editBtn.className='tinybtn';editBtn.textContent='Editar';editBtn.onclick=()=>openMessageForm(m);editBtn.setAttribute('aria-label','Editar mensagem');
+  const delBtn=document.createElement('button');delBtn.className='tinybtn danger';delBtn.textContent='Apagar';delBtn.onclick=()=>deleteMessage(m.id);delBtn.setAttribute('aria-label','Apagar mensagem');
+  tools.append(editBtn,delBtn);row.append(stack,tools);msgs.append(row);
+ });
+ requestAnimationFrame(()=>msgs.scrollTop=msgs.scrollHeight);
+}
+function showModal(title,body,actions){
+ $('modalTitle').textContent=title;$('modalBody').replaceChildren();$('modalActions').replaceChildren();
+ if(typeof body==='string') $('modalBody').innerHTML=body; else $('modalBody').append(body);
+ actions.forEach(a=>{const b=document.createElement('button');b.className=a.primary?'primary':'secondary';if(a.danger)b.classList.add('danger');b.textContent=a.label;b.onclick=()=>a.onClick();$('modalActions').append(b);});
+ $('modalBack').classList.add('show');
+}
+function closeModal(){$('modalBack').classList.remove('show');modalSave=null;}
+function field(label,value='',placeholder='',type='text'){
+ const wrap=document.createElement('div');wrap.className='field';const l=document.createElement('label');l.textContent=label;const input=document.createElement('input');input.type=type;input.value=value||'';input.placeholder=placeholder;wrap.append(l,input);wrap.input=input;return wrap;
+}
+function openContactForm(c=null){
+ const isNew=!c;const data=c||{name:'',handle:'',avatar:'',messages:[]};
+ const box=document.createElement('div');
+ const name=field('Nome de exibição',data.name,'Ex.: Maria Silva');const handle=field('Nome de usuário (sem @)',data.handle,'exemplo');const avatar=field('URL da foto de perfil (opcional)',data.avatar,'https://...','url');
+ const note=document.createElement('p');note.className='modalnote';note.textContent='Dica: você também pode usar uma imagem pública por URL. Esta foto aparece apenas neste simulador.';
+ box.append(name,handle,avatar,note);
+ const actions=[{label:'Cancelar',onClick:closeModal}];
+ if(!isNew)actions.push({label:'Excluir conversa',danger:true,onClick:()=>{if(confirm('Excluir esta conversa e todas as mensagens dela?')){state.conversations=state.conversations.filter(x=>x.id!==c.id);if(state.activeId===c.id)state.activeId=state.conversations[0]?.id||null;persist();closeModal();render();}}});
+ actions.push({label:isNew?'Criar conversa':'Salvar alterações',primary:true,onClick:()=>{
+  const nm=name.input.value.trim(), hd=handle.input.value.trim().replace(/^@/,'').replace(/\s/g,'');
+  if(!nm&&!hd){alert('Digite pelo menos um nome ou usuário.');return;}
+  if(isNew){const nc={id:uid(),name:nm||hd,handle:hd||'usuario',avatar:avatar.input.value.trim(),messages:[]};state.conversations.unshift(nc);state.activeId=nc.id;}
+  else {c.name=nm||hd;c.handle=hd||c.handle;c.avatar=avatar.input.value.trim();}
+  persist();closeModal();render();$('layout').classList.add('chat-open');
+ }});
+ showModal(isNew?'Nova conversa':'Editar perfil da conversa',box,actions);
+}
+function openProfileForm(){
+ const box=document.createElement('div');const name=field('Seu nome',state.me.name,'Seu Nome');const handle=field('Seu usuário (sem @)',state.me.handle,'seu_usuario');const avatar=field('URL da sua foto (opcional)',state.me.avatar,'https://...','url');box.append(name,handle,avatar);
+ showModal('Editar meu perfil',box,[{label:'Cancelar',onClick:closeModal},{label:'Salvar',primary:true,onClick:()=>{state.me.name=name.input.value.trim()||'Seu Nome';state.me.handle=handle.input.value.trim().replace(/^@/,'').replace(/\s/g,'')||'seu_usuario';state.me.avatar=avatar.input.value.trim();persist();closeModal();render();}}]);
+}
+function openMessageForm(m=null){
+ const c=active();if(!c)return;const isNew=!m;const data=m||{side:'received',text:'',time:nowTime()};
+ const box=document.createElement('div');
+ const sideWrap=document.createElement('div');sideWrap.className='field';const label=document.createElement('label');label.textContent='Quem enviou?';const select=document.createElement('select');select.style.cssText='padding:10px;border:1px solid #ddd;border-radius:9px;background:var(--bg);color:var(--text)';select.innerHTML='<option value="received">A outra pessoa</option><option value="sent">Você</option>';select.value=data.side;sideWrap.append(label,select);
+ const textWrap=document.createElement('div');textWrap.className='field';const tl=document.createElement('label');tl.textContent='Texto da mensagem';const textarea=document.createElement('textarea');textarea.value=data.text;textarea.placeholder='Digite a mensagem...';textWrap.append(tl,textarea);
+ const time=field('Horário exibido',data.time||nowTime(),'Ex.: 14:32');
+ const note=document.createElement('p');note.className='modalnote';note.textContent='Você pode editar mensagens de qualquer lado. As alterações são apenas desta simulação.';
+ box.append(sideWrap,textWrap,time,note);
+ showModal(isNew?'Adicionar mensagem':'Editar mensagem',box,[{label:'Cancelar',onClick:closeModal},{label:isNew?'Adicionar':'Salvar',primary:true,onClick:()=>{
+  const txt=textarea.value.trim();if(!txt){alert('Digite o texto da mensagem.');return;}
+  if(isNew)c.messages.push({id:uid(),side:select.value,text:txt,time:time.input.value.trim()||nowTime()});
+  else {m.side=select.value;m.text=txt;m.time=time.input.value.trim()||nowTime();}
+  persist();closeModal();render();renderConversations();
+ }}]);
+}
+function deleteMessage(id){const c=active();if(!c)return;if(!confirm('Apagar esta mensagem da simulação?'))return;c.messages=c.messages.filter(m=>m.id!==id);persist();render();renderConversations();}
+function openDataModal(){
+ const box=document.createElement('div');const p=document.createElement('p');p.className='modalnote';p.textContent='Exporte um arquivo JSON como cópia de segurança ou importe um arquivo criado por este simulador. Importar substituirá os dados atuais.';box.append(p);
+ const exportBtn=document.createElement('button');exportBtn.className='secondary';exportBtn.textContent='Exportar conversas (.json)';exportBtn.style.width='100%';exportBtn.onclick=exportData;
+ const importBtn=document.createElement('button');importBtn.className='secondary';importBtn.textContent='Importar conversas (.json)';importBtn.style.width='100%';importBtn.style.marginTop='9px';importBtn.onclick=()=>{$('importFile').click();};
+ const resetBtn=document.createElement('button');resetBtn.className='secondary danger';resetBtn.textContent='Restaurar dados de exemplo';resetBtn.style.width='100%';resetBtn.style.marginTop='9px';resetBtn.onclick=()=>{if(confirm('Substituir tudo pelos dados de exemplo?')){state=structuredClone(starter);persist();closeModal();render();}};
+ box.append(exportBtn,importBtn,resetBtn);showModal('Dados e backup',box,[{label:'Fechar',onClick:closeModal}]);
+}
+function exportData(){
+ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='meu-direct-simulacao.json';document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+$('importFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{const parsed=JSON.parse(await file.text());if(!parsed||!Array.isArray(parsed.conversations)||!parsed.me)throw new Error('Formato inválido');if(!confirm('Importar vai substituir as conversas atuais. Continuar?'))return;state=normalize(parsed);persist();closeModal();render();alert('Conversas importadas.');}
+ catch(err){alert('Não foi possível importar. Escolha um JSON exportado por este simulador.');}
+ finally{e.target.value='';}
+});
+$('composer').addEventListener('submit',e=>{e.preventDefault();const c=active(),input=$('messageInput'),txt=input.value.trim();if(!c||!txt)return;c.messages.push({id:uid(),side:'sent',text:txt,time:nowTime()});input.value='';input.style.height='auto';persist();render();renderConversations();input.focus();});
+$('messageInput').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px';});
+$('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('composer').requestSubmit();}});
+$('search').addEventListener('input',renderConversations);
+$('newChatBtn').onclick=()=>openContactForm(); $('addConversation').onclick=()=>openContactForm();
+$('profileBtn').onclick=openProfileForm;$('dataBtn').onclick=openDataModal;$('editContactBtn').onclick=()=>{const c=active();if(c)openContactForm(c);};
+$('backBtn').onclick=()=>$('layout').classList.remove('chat-open');
+$('modalBack').addEventListener('click',e=>{if(e.target===$('modalBack'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+render();
+})();
+</script>
+</body>
+</html>
